@@ -1,0 +1,189 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Team {
+  id            Int      @id @default(autoincrement())
+  apiId         Int?     @unique
+  name          String
+  shortName     String?
+  logo          String?
+  league        String?
+  wins          Int      @default(0)
+  draws         Int      @default(0)
+  losses        Int      @default(0)
+  goalsFor      Int      @default(0)
+  goalsAgainst  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  homeMatches   Match[]  @relation("HomeTeam")
+  awayMatches   Match[]  @relation("AwayTeam")
+  
+  @@index([name])
+}
+
+model Match {
+  id            Int      @id @default(autoincrement())
+  apiId         Int?     @unique
+  homeTeamId    Int
+  awayTeamId    Int
+  league        String
+  leagueId      String?
+  date          DateTime
+  hour          String?
+  status        String   @default("scheduled") // scheduled, live, finished, cancelled
+  homeScore     Int?
+  awayScore     Int?
+  venue         String?  // Stade/Venue
+  city          String?  // Ville pour la météo
+  country       String?  // Pays pour la météo
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  homeTeam      Team     @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam      Team     @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  prediction    Prediction?
+  enrichment    MatchEnrichment?
+  
+  @@index([date])
+  @@index([league])
+  @@index([status])
+}
+
+model MatchEnrichment {
+  id            Int      @id @default(autoincrement())
+  matchId       Int      @unique
+  match         Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  
+  // Blessures et suspensions (JSON)
+  homeInjuries  String?  // JSON array of injuries
+  awayInjuries  String?  // JSON array of injuries
+  
+  // Lineups (JSON)
+  homeLineup    String?  // JSON lineup
+  awayLineup    String?  // JSON lineup
+  
+  // Météo (JSON)
+  weather       String?  // JSON weather data
+  
+  // Métadonnées
+  enrichedAt    DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([matchId])
+}
+
+model Prediction {
+  id                Int      @id @default(autoincrement())
+  matchId           Int      @unique
+  win1              Float    // Probability 0-1
+  draw              Float
+  win2              Float
+  predictedScore    String?  // "2-1"
+  scoreExact        String?  // JSON array of {score, probability}
+  btts              Float    // Probability 0-1
+  over25            Float    // Probability 0-1
+  analysis          String
+  confidence        Float    // Overall confidence 0-1
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  match             Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  
+  @@index([matchId])
+  @@index([createdAt])
+}
+
+model Cache {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String   // JSON string
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  @@index([key])
+  @@index([expiresAt])
+}
+
+// NextAuth.js Models
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Subscription fields
+  plan          String    @default("free") // free, trial, pro, pro_max
+  trialStart    DateTime?
+  trialEnd      DateTime?
+  subscriptionStart DateTime?
+  subscriptionEnd   DateTime?
+  isActive      Boolean   @default(false)
+  
+  accounts      Account[]
+  sessions      Session[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  
+  @@unique([identifier, token])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
