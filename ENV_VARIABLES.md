@@ -35,11 +35,15 @@ NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
 # Paystack (paiement)
 PAYSTACK_SECRET_KEY="sk_test_votre-cle-paystack"
-# Devise utilisée par défaut : USD (Paystack accepte NGN, GHS, USD, ZAR)
+# Devise utilisée par défaut côté passerelle (USD conseillé si activé sur Paystack)
+# Renseignez XOF, NGN, etc. si votre compte Paystack n'accepte pas USD.
 PAYSTACK_CURRENCY="USD"
-# Optionnel : override du montant (en plus petite unité, exemple cents pour USD)
-# PAYSTACK_PLAN_PRO_AMOUNT="1900"      # 19,00 USD
-# PAYSTACK_PLAN_PRO_MAX_AMOUNT="2900"  # 29,00 USD
+# Taux de conversion USD -> devise Paystack pour calculer les montants de secours
+# (Utilisé uniquement si vous ne définissez pas manuellement les montants ci-dessous)
+PAYSTACK_USD_EXCHANGE_RATE="600"
+# Optionnel : override du montant (en plus petite unité, exemple cents pour USD, kobo pour NGN, francs pour XOF)
+# PAYSTACK_PLAN_PRO_AMOUNT="1900"      # 19,00 USD ou équivalent minor unit
+# PAYSTACK_PLAN_PRO_MAX_AMOUNT="2900"  # 29,00 USD ou équivalent minor unit
 ```
 
 ## Variables OPTIONNELLES
@@ -87,7 +91,7 @@ openssl rand -base64 32
 1. Connectez-vous à https://dashboard.paystack.com/
 2. Allez dans **Settings → Developer** pour récupérer la clé secrète (`sk_test_...` ou `sk_live_...`)
 3. Copiez la clé dans `PAYSTACK_SECRET_KEY`
-4. Définissez également `PAYSTACK_CURRENCY` (USD par défaut) et, si besoin, `PAYSTACK_PLAN_PRO_AMOUNT` / `PAYSTACK_PLAN_PRO_MAX_AMOUNT` (en plus petite unité)
+4. Définissez également `PAYSTACK_CURRENCY` (USD par défaut), `PAYSTACK_USD_EXCHANGE_RATE` si vous facturez dans une autre devise, et, si besoin, `PAYSTACK_PLAN_PRO_AMOUNT` / `PAYSTACK_PLAN_PRO_MAX_AMOUNT` (en plus petite unité)
 
 ## Configuration sur Vercel
 

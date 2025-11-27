@@ -38,15 +38,10 @@ function getPaystackSecretKey() {
   return secret
 }
 
-function parseAmount(value: string | undefined, fallback: number) {
-  if (!value) {
-    return fallback
-  }
-
+function parseAmount(value: string | undefined) {
+  if (!value) return undefined
   const parsed = Number(value)
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    return fallback
-  }
+  if (!Number.isFinite(parsed) || parsed <= 0) return undefined
   return Math.round(parsed)
 }
 
@@ -55,10 +50,20 @@ const DEFAULT_PLAN_PRICES_USD: Record<PaystackPlan, number> = {
   pro_max: 29,
 }
 
+const MINOR_UNIT_MAP: Record<string, number> = {
+  USD: 100,
+  NGN: 100,
+  GHS: 100,
+  ZAR: 100,
+  XOF: 1,
+}
+
+function getMinorUnitMultiplier(currency: string) {
+  return MINOR_UNIT_MAP[currency] ?? 100
+}
+
 export function getPaystackPlanConfig(plan: PaystackPlan) {
   const envKey = plan === "pro" ? "PAYSTACK_PLAN_PRO_AMOUNT" : "PAYSTACK_PLAN_PRO_MAX_AMOUNT"
-  const fallbackMinor = Math.round(DEFAULT_PLAN_PRICES_USD[plan] * 100)
-  const amount = parseAmount(process.env[envKey], fallbackMinor)
   const currency = (process.env.PAYSTACK_CURRENCY || "USD").toUpperCase()
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
@@ -67,6 +72,24 @@ export function getPaystackPlanConfig(plan: PaystackPlan) {
   const normalizedBaseUrl = baseUrl.endsWith("/")
     ? baseUrl.slice(0, -1)
     : baseUrl
+  const minorUnit = getMinorUnitMultiplier(currency)
+
+  const envAmount = parseAmount(process.env[envKey])
+
+  const rawRate = Number(process.env.PAYSTACK_USD_EXCHANGE_RATE || "600")
+  const usdExchangeRate =
+    currency === "USD"
+      ? 1
+      : Number.isFinite(rawRate) && rawRate > 0
+        ? rawRate
+        : 600
+
+  const fallbackAmount =
+    currency === "USD"
+      ? Math.round(DEFAULT_PLAN_PRICES_USD[plan] * minorUnit)
+      : Math.max(1, Math.round(DEFAULT_PLAN_PRICES_USD[plan] * usdExchangeRate * minorUnit))
+
+  const amount = envAmount ?? fallbackAmount
 
   return {
     amount,
