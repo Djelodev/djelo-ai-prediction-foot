@@ -13,7 +13,7 @@ const plans = [
   {
     id: "pro",
     name: "Pro",
-    price: "29",
+    price: "19",
     period: "mois",
     description: "Pour continuer après l'essai gratuit",
     features: [
@@ -29,7 +29,7 @@ const plans = [
   {
     id: "pro_max",
     name: "Pro Max",
-    price: "59",
+    price: "29",
     period: "mois",
     description: "Pour un contrôle total de vos paris",
     features: [
@@ -209,7 +209,7 @@ export default function PricingPage() {
                     <CardDescription>{plan.description}</CardDescription>
                     <p className="text-sm text-primary mt-2">{plan.highlight}</p>
                     <div className="mt-4 flex items-baseline gap-2">
-                      <span className="text-4xl font-bold">{plan.price}€</span>
+                      <span className="text-4xl font-bold">{plan.price}$</span>
                       <span className="text-muted-foreground">/{plan.period}</span>
                     </div>
                   </CardHeader>

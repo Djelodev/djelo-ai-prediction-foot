@@ -250,10 +250,10 @@ export default function SettingsPage() {
                     </p>
                   )}
                   {user?.plan === "pro" && (
-                    <p className="text-sm text-muted-foreground">29€/mois</p>
+                    <p className="text-sm text-muted-foreground">19$/mois</p>
                   )}
                   {(user?.plan === "pro_max" || user?.plan === "enterprise") && (
-                    <p className="text-sm text-muted-foreground">59€/mois</p>
+                    <p className="text-sm text-muted-foreground">29$/mois</p>
                   )}
                   {user?.plan === "free" && (
                     <p className="text-sm text-muted-foreground">Gratuit</p>

@@ -386,7 +386,7 @@ const planHighlights = [
   {
     name: "Plan Pro",
     tagline: "Le socle pour sécuriser vos 1N2",
-    price: "29€",
+    price: "19$",
     benefits: [
       "1N2 illimités + double chance",
       "Alertes surprises & fatigue",
@@ -398,7 +398,7 @@ const planHighlights = [
   {
     name: "Plan Pro Max",
     tagline: "Pour dominer score exact & BTTS",
-    price: "59€",
+    price: "29$",
     benefits: [
       "Score exact + probabilité",
       "BTTS & Over/Under 2.5",

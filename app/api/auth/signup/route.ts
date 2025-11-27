@@ -89,10 +89,22 @@ export async function POST(request: NextRequest) {
       meta: error?.meta,
     })
     
+    // Log detailed error for debugging
+    const errorMessage = error?.message || "Unknown error"
+    const errorCode = error?.code || "UNKNOWN"
+    
+    console.error("❌ Signup error details:", {
+      message: errorMessage,
+      code: errorCode,
+      stack: error?.stack,
+    })
+    
     return NextResponse.json(
       { 
         error: "Erreur lors de la création du compte",
-        details: process.env.NODE_ENV === "development" ? error?.message : undefined,
+        details: process.env.NODE_ENV === "development" || process.env.VERCEL_ENV === "preview" 
+          ? `${errorMessage} (Code: ${errorCode})` 
+          : undefined,
       },
       { status: 500 }
     )

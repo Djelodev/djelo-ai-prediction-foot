@@ -4,17 +4,16 @@ import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { AuthGuard } from "@/components/auth-guard"
-import { CreditCard, Lock, Check, Loader2 } from "lucide-react"
+import { CreditCard, Lock, Check, Loader2, ShieldCheck } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 
 const planDetails: Record<"pro" | "pro_max", { name: string; price: number; duration: string; summary: string; includes: string[] }> = {
   pro: { 
     name: "Plan Pro", 
-    price: 29, 
+    price: 19, 
     duration: "1 mois",
     summary: "Débloque les pronostics 1N2 et Double Chance sans limite.",
     includes: [
@@ -25,7 +24,7 @@ const planDetails: Record<"pro" | "pro_max", { name: string; price: number; dura
   },
   pro_max: { 
     name: "Plan Pro Max", 
-    price: 59, 
+    price: 29, 
     duration: "1 mois",
     summary: "Ajoute les pronostics avancés (Score exact, BTTS, Over/Under).",
     includes: [
@@ -39,7 +38,7 @@ const planDetails: Record<"pro" | "pro_max", { name: string; price: number; dura
 function CheckoutContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user, refetch, loading: authLoading } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const planParam = searchParams.get("plan") || "pro"
   const normalizedPlan: "pro" | "pro_max" = planParam === "pro_max" || planParam === "pro"
     ? (planParam as "pro" | "pro_max")
@@ -48,11 +47,8 @@ function CheckoutContent() {
       : "pro"
   const planInfo = planDetails[normalizedPlan]
 
-  const [cardNumber, setCardNumber] = useState("")
-  const [cardName, setCardName] = useState("")
-  const [cardExpiry, setCardExpiry] = useState("")
-  const [cardCvv, setCardCvv] = useState("")
   const [loading, setLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (authLoading) return
@@ -68,48 +64,34 @@ function CheckoutContent() {
     console.log("✅ Checkout ready for plan:", normalizedPlan)
   }, [user, router, normalizedPlan, planInfo, authLoading])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+  const handlePaystackCheckout = async () => {
     setLoading(true)
-
-    console.log("💳 Processing payment for plan:", normalizedPlan)
-
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    setErrorMessage(null)
 
     try {
-      const response = await fetch("/api/subscription/activate", {
+      const response = await fetch("/api/payments/paystack/initialize", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           plan: normalizedPlan,
-          durationMonths: 1,
-          // In a real app, you would send payment info to a payment processor
-          paymentMethod: "card",
         }),
       })
 
       const data = await response.json()
-      console.log("💳 Subscription response:", data)
+      console.log("💳 Paystack init response:", data)
 
-      if (response.ok) {
-        console.log("✅ Subscription activated, refreshing session...")
-        // Refresh session to get updated subscription status
-        await refetch()
-        console.log("✅ Session refreshed, redirecting...")
-        // Use window.location.href to force a full page reload
-        window.location.href = "/dashboard?subscribed=true"
-      } else {
-        console.error("❌ Subscription error:", data)
-        alert(data.error || "Erreur lors de l'activation de l'abonnement")
-        setLoading(false)
+      if (!response.ok || !data.authorizationUrl) {
+        throw new Error(data.error || "Impossible d'initialiser le paiement.")
       }
+
+      window.location.href = data.authorizationUrl as string
     } catch (error) {
-      console.error("❌ Subscription catch error:", error)
-      alert("Erreur lors de l'activation de l'abonnement")
+      console.error("❌ Paystack init error:", error)
+      const message =
+        error instanceof Error ? error.message : "Impossible d'initialiser le paiement."
+      setErrorMessage(message)
       setLoading(false)
     }
   }
@@ -126,91 +108,48 @@ function CheckoutContent() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
-            {/* Payment Form */}
+            {/* Payment CTA */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="h-5 w-5" />
-                  Informations de paiement
+                  Paiement sécurisé via Paystack
                 </CardTitle>
                 <CardDescription>
-                  Paiement sécurisé (simulation)
+                  Vous serez redirigé vers Paystack pour finaliser votre {planInfo.name}.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="card-number">Numéro de carte</Label>
-                    <Input
-                      id="card-number"
-                      placeholder="1234 5678 9012 3456"
-                      value={cardNumber}
-                      onChange={(e) => setCardNumber(e.target.value.replace(/\s/g, "").slice(0, 16))}
-                      maxLength={16}
-                      required
-                    />
-                  </div>
+              <CardContent className="space-y-4">
+                <Alert>
+                  <ShieldCheck className="h-4 w-4" />
+                  <AlertTitle>Paiement protégé</AlertTitle>
+                  <AlertDescription>
+                    Paystack chiffre vos informations bancaires et valide instantanément votre abonnement.
+                  </AlertDescription>
+                </Alert>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="card-name">Nom sur la carte</Label>
-                    <Input
-                      id="card-name"
-                      placeholder="Jean Dupont"
-                      value={cardName}
-                      onChange={(e) => setCardName(e.target.value)}
-                      required
-                    />
-                  </div>
+                {errorMessage && (
+                  <Alert variant="destructive">
+                    <AlertTitle>Impossible d'initialiser Paystack</AlertTitle>
+                    <AlertDescription>{errorMessage}</AlertDescription>
+                  </Alert>
+                )}
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="card-expiry">Date d'expiration</Label>
-                      <Input
-                        id="card-expiry"
-                        placeholder="MM/AA"
-                        value={cardExpiry}
-                        onChange={(e) => {
-                          let value = e.target.value.replace(/\D/g, "")
-                          if (value.length >= 2) {
-                            value = value.slice(0, 2) + "/" + value.slice(2, 4)
-                          }
-                          setCardExpiry(value)
-                        }}
-                        maxLength={5}
-                        required
-                      />
-                    </div>
+                <Button onClick={handlePaystackCheckout} className="w-full" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Redirection vers Paystack...
+                    </>
+                  ) : (
+                    "Procéder au paiement sécurisé"
+                  )}
+                </Button>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="card-cvv">CVV</Label>
-                      <Input
-                        id="card-cvv"
-                        placeholder="123"
-                        type="password"
-                        value={cardCvv}
-                        onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 3))}
-                        maxLength={3}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
-                    <Lock className="h-4 w-4" />
-                    <span>Paiement sécurisé et crypté</span>
-                  </div>
-
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Traitement...
-                      </>
-                    ) : (
-                      `Payer ${planInfo.price}€`
-                    )}
-                  </Button>
-                </form>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Lock className="h-4 w-4" />
+                  <span>Montant facturé : {planInfo.price}$ / mois. Annulation possible à tout moment.</span>
+                </div>
               </CardContent>
             </Card>
 
@@ -241,7 +180,7 @@ function CheckoutContent() {
                   <div className="border-t pt-3">
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
-                      <span>{planInfo.price}€</span>
+                      <span>{planInfo.price}$</span>
                     </div>
                   </div>
                 </div>

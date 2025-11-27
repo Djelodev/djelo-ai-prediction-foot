@@ -32,6 +32,14 @@ OPENWEATHER_API_KEY="votre-cle-openweather-ici"
 # En production, sera automatiquement défini par Vercel
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 # En production : https://votre-app.vercel.app
+
+# Paystack (paiement)
+PAYSTACK_SECRET_KEY="sk_test_votre-cle-paystack"
+# Devise utilisée par défaut : USD (Paystack accepte NGN, GHS, USD, ZAR)
+PAYSTACK_CURRENCY="USD"
+# Optionnel : override du montant (en plus petite unité, exemple cents pour USD)
+# PAYSTACK_PLAN_PRO_AMOUNT="1900"      # 19,00 USD
+# PAYSTACK_PLAN_PRO_MAX_AMOUNT="2900"  # 29,00 USD
 ```
 
 ## Variables OPTIONNELLES
@@ -74,6 +82,12 @@ openssl rand -base64 32
 2. Créez un compte gratuit
 3. Récupérez votre API key
 4. Copiez-la dans `OPENWEATHER_API_KEY`
+
+### 5. PAYSTACK_SECRET_KEY
+1. Connectez-vous à https://dashboard.paystack.com/
+2. Allez dans **Settings → Developer** pour récupérer la clé secrète (`sk_test_...` ou `sk_live_...`)
+3. Copiez la clé dans `PAYSTACK_SECRET_KEY`
+4. Définissez également `PAYSTACK_CURRENCY` (USD par défaut) et, si besoin, `PAYSTACK_PLAN_PRO_AMOUNT` / `PAYSTACK_PLAN_PRO_MAX_AMOUNT` (en plus petite unité)
 
 ## Configuration sur Vercel
 
