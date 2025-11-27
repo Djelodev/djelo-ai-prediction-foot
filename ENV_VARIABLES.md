@@ -44,6 +44,10 @@ PAYSTACK_USD_EXCHANGE_RATE="600"
 # Optionnel : override du montant (en plus petite unité : cents pour USD, kobo pour NGN, centimes de franc pour XOF)
 # PAYSTACK_PLAN_PRO_AMOUNT="1900"      # 19,00 USD ou équivalent minor unit (ex: 1 XOF = 100)
 # PAYSTACK_PLAN_PRO_MAX_AMOUNT="2900"  # 29,00 USD ou équivalent minor unit
+
+# Vérification de domaine Paystack (.well-known)
+PAYSTACK_VERIFICATION_FILENAME="paystack-challenge.txt"
+PAYSTACK_VERIFICATION_CONTENT="copiez ici le contenu du fichier fourni par Paystack"
 ```
 
 ## Variables OPTIONNELLES
@@ -92,6 +96,7 @@ openssl rand -base64 32
 2. Allez dans **Settings → Developer** pour récupérer la clé secrète (`sk_test_...` ou `sk_live_...`)
 3. Copiez la clé dans `PAYSTACK_SECRET_KEY`
 4. Définissez également `PAYSTACK_CURRENCY` (USD par défaut), `PAYSTACK_USD_EXCHANGE_RATE` si vous facturez dans une autre devise, et, si besoin, `PAYSTACK_PLAN_PRO_AMOUNT` / `PAYSTACK_PLAN_PRO_MAX_AMOUNT` (en plus petite unité)
+5. Pour la vérification de domaine, renseignez `PAYSTACK_VERIFICATION_FILENAME` avec le nom exact du fichier téléchargé (ex: `paystack-challenge.txt`) et collez son contenu dans `PAYSTACK_VERIFICATION_CONTENT`. La route `https://votre-domaine/.well-known/<fichier>` servira automatiquement ce contenu.
 
 ## Configuration sur Vercel
 
