@@ -50,6 +50,17 @@ const DEFAULT_PLAN_PRICES_USD: Record<PaystackPlan, number> = {
   pro_max: 29,
 }
 
+const DEFAULT_PLAN_PRICES_MINOR: Record<string, Record<PaystackPlan, number>> = {
+  USD: {
+    pro: 1900,
+    pro_max: 2900,
+  },
+  XOF: {
+    pro: 10640, // 19 * 560
+    pro_max: 16240, // 29 * 560
+  },
+}
+
 const MINOR_UNIT_MAP: Record<string, number> = {
   USD: 100,
   NGN: 100,
@@ -84,10 +95,13 @@ export function getPaystackPlanConfig(plan: PaystackPlan) {
         ? rawRate
         : 600
 
+  const defaultMinorForCurrency = DEFAULT_PLAN_PRICES_MINOR[currency]?.[plan]
+
   const fallbackAmount =
-    currency === "USD"
+    defaultMinorForCurrency ??
+    (currency === "USD"
       ? Math.round(DEFAULT_PLAN_PRICES_USD[plan] * minorUnit)
-      : Math.max(1, Math.round(DEFAULT_PLAN_PRICES_USD[plan] * usdExchangeRate * minorUnit))
+      : Math.max(1, Math.round(DEFAULT_PLAN_PRICES_USD[plan] * usdExchangeRate * minorUnit)))
 
   const amount = envAmount ?? fallbackAmount
 
