@@ -41,8 +41,8 @@ PAYSTACK_CURRENCY="USD"
 # Taux de conversion USD -> devise Paystack pour calculer les montants de secours
 # (Utilisé uniquement si vous ne définissez pas manuellement les montants ci-dessous)
 PAYSTACK_USD_EXCHANGE_RATE="600"
-# Optionnel : override du montant (en plus petite unité, exemple cents pour USD, kobo pour NGN, francs pour XOF)
-# PAYSTACK_PLAN_PRO_AMOUNT="1900"      # 19,00 USD ou équivalent minor unit
+# Optionnel : override du montant (en plus petite unité : cents pour USD, kobo pour NGN, centimes de franc pour XOF)
+# PAYSTACK_PLAN_PRO_AMOUNT="1900"      # 19,00 USD ou équivalent minor unit (ex: 1 XOF = 100)
 # PAYSTACK_PLAN_PRO_MAX_AMOUNT="2900"  # 29,00 USD ou équivalent minor unit
 ```
 

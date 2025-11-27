@@ -56,8 +56,8 @@ const DEFAULT_PLAN_PRICES_MINOR: Record<string, Record<PaystackPlan, number>> = 
     pro_max: 2900,
   },
   XOF: {
-    pro: 10640, // 19 * 560
-    pro_max: 16240, // 29 * 560
+    pro: 1_064_000, // 19 * 560 * 100 (XOF has 2 decimals)
+    pro_max: 1_624_000, // 29 * 560 * 100
   },
 }
 
@@ -66,7 +66,7 @@ const MINOR_UNIT_MAP: Record<string, number> = {
   NGN: 100,
   GHS: 100,
   ZAR: 100,
-  XOF: 1,
+  XOF: 100,
 }
 
 function getMinorUnitMultiplier(currency: string) {
